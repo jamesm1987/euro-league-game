@@ -50,7 +50,7 @@ class League extends Model
 
     public static function getCountry($country) {
 
-        $countries = $this->getCountries();
+        $countries = self::getCountries();
 
         $country = array_search($country,  array_column($countries, 'name'));
         
