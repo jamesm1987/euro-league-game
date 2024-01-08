@@ -9,6 +9,7 @@ use App\Models\Team;
 use App\Models\ApiRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 
 
 class ApiFootballService
@@ -62,7 +63,7 @@ class ApiFootballService
         $requests = $this->apiQuery($apiParams);
         
         if ($requests['save']) {
-            $this->saveRequests($requests);
+            
             $this->mapApiId($model, $requests);
         }
 
@@ -83,11 +84,12 @@ class ApiFootballService
         $requests = $this->apiQuery($apiParams);
         
         if ($requests['save']) {
-            $this->saveRequests($requests);
-            $this->mapApiId($model, $requests);
+            Log::info($requests);
+            // $this->saveRequests($requests);
+            // $this->mapApiId($model, $requests);
         }
     
-
+        // dd($requests);
       
         return $requests;
     }
@@ -125,14 +127,37 @@ class ApiFootballService
             // attempt to load from db
             $request = ApiRequest::where('league_id', $league->id)->where('request_type', $params['type'])->first();
             $response = !empty($request) ? $request->response : false;
-            
+
             if (!$request || ($date > $params['cacheExpire'])) {   
                $request = $this->client->get("$endpoint?$queryString");
-               $response = $request->getBody();
+               
+               $json_response = json_decode($request->getBody());
+
+               if (isset($json_response->response)) {
+
+                foreach ($json_response->response as $data) {
+          
+                    $id = $leagueData->league->id;
+                    $leagueName = $leagueData->league->name;
+                    $leagueCountry = $leagueData->country->name;
+
+                    // Now you can use these values as needed
+                    // For example, printing the league name
+
+                    if (in_array($leagueCountry, $leagues)) {
+                        echo "League Name: $leagueName Country: $leagueCountry";
+                    }
+                }
+            } else {
+                // Handle the case where 'response' property is not present in the object
+                echo "No response data available.";
+            }
+
+
                $save = true;         
             }
     
-            $data[$id]['response'] = $response;
+            $data[$id]['request'] = $response;
             
             $data[$id]['league_id'] = $league->id;
             $data[$id]['type'] = $params['type'];
@@ -143,19 +168,17 @@ class ApiFootballService
         return $data;
     }  
     
-    protected function saveRequests($requests) {
+    protected function saveRequest($request) {    
 
-        foreach ($requests as $request) {
-            $apiRequest = new ApiRequest;
+        $apiRequest = ApiRequest::Create([
+            'response' => $request['response'],
+            'request_type' => $request['type'],
+            'league_id' => $request['league_id'],
+        ]);
 
-            if (isset($request['response']) && is_array($request['response'])) {
-                $apiRequest->response = $request['response'];
-                $apiRequest->request_type = $request['type'];
-                $apiRequest->league_id = $request['league_id'];
-                $apiRequest->save();
-            }
- 
-        }
+        return $apiRequest;
+
+
     }
 
     protected function mapApiId($model, $data)
@@ -164,11 +187,11 @@ class ApiFootballService
 
         foreach ($data as $responseItem) {
             
-            if (!isset($responseItem['response']) || !is_array($responseItem['response'])) {
+            if (!isset($responseItem->response) || !is_array($responseItem->response)) {
                 return;
             }
             
-                foreach ($responseItem['response'] as $record) {
+                foreach ($responseItem->response as $record) {
                 
                     $query = $model::where('name', $record[$type]['name']);
 

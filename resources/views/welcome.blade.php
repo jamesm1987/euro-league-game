@@ -17,7 +17,35 @@
     @php
         $request = \App\Models\ApiRequest::all();
             
-       
+        $json_leagues = file_get_contents(database_path('football-api-league-requests.json'));
+
+        $response = json_decode($json_leagues);
+
+        $leagues = \App\Models\League::pluck('country', 'id')->toArray();
+        
+        foreach ($response as $item) {
+        
+        // Check if the 'response' property exists in the object
+            if (isset($item->response)) {
+                // Iterate over the 'response' array in the object
+                foreach ($item->response as $leagueData) {
+                    // Access league details
+                    $leagueId = $leagueData->league->id;
+                    $leagueName = $leagueData->league->name;
+                    $leagueCountry = $leagueData->country->name;
+
+                    // Now you can use these values as needed
+                    // For example, printing the league name
+
+                    if (in_array($leagueCountry, $leagues)) {
+                        echo "League Name: $leagueName Country: $leagueCountry";
+                    }
+                }
+            } else {
+                // Handle the case where 'response' property is not present in the object
+                echo "No response data available.";
+            }
+        }
     @endphp
     
     @foreach ($request as $req)

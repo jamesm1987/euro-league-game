@@ -5,17 +5,17 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class ApiRequest extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $casts = [
-        'response' => 'array'
-    ];
+    // protected $casts = [
+    //     'response' => 'json'
+    // ];
 
     protected $fillable = [
         'response',
@@ -39,6 +39,14 @@ class ApiRequest extends Model
             });
 
         });
+    }
+
+    /**
+     * Get response as json.
+     */
+    public function response()
+    {
+        return json_decode($this->response);
     }
 
     
