@@ -57,16 +57,19 @@ class ApiFootballService
                 'league' => 'api_id',
             ],
             'season' => true,
-            'cacheExpire' => Carbon::now()->addDays(30)
+            'cacheExpire' => Carbon::now()->addDays(30),
+            'filterResults' => [
+                'filterBy' => 'country',
+                'prefix_type' => true
+            ],
         ];
 
         $requests = $this->apiQuery($apiParams);
         
-        if ($requests['save']) {
-            
-            $this->mapApiId($model, $requests);
+        foreach ($requests as $request) {    
+            $this->mapApiId($model, $request);
         }
-
+    
         return $requests;
     }
 
@@ -78,18 +81,19 @@ class ApiFootballService
             'endpoint' => 'leagues', 
             'args' => ['search' => 'name'], 
             'season' => false,
-            'cacheExpire' => Carbon::now()->addDays(30)
+            'cacheExpire' => Carbon::now()->addDays(30),
+            'filterResults' => [
+                'filterBy' => 'country',
+                'field' => 'name',
+                'prefix_type' => false
+            ],
         ];
 
         $requests = $this->apiQuery($apiParams);
         
-        if ($requests['save']) {
-            Log::info($requests);
-            // $this->saveRequests($requests);
-            // $this->mapApiId($model, $requests);
+        foreach ($requests as $request) {
+            $this->mapApiId($model, $request);
         }
-    
-        // dd($requests);
       
         return $requests;
     }
@@ -108,9 +112,9 @@ class ApiFootballService
         $year = $this->getYear();
         $endpoint = $params['endpoint'];
         $date = Carbon::now();
-        $save = false;
-
-
+    
+        $requests = [];
+        
         foreach ($leagues as $id => $league) {
             
             $queryString = "";
@@ -123,56 +127,39 @@ class ApiFootballService
             }
 
             $queryString = substr($queryString, 0, -1) . (!empty($params['season']) ? "&season=$year" : "");
-            
+                        
             // attempt to load from db
-            $request = ApiRequest::where('league_id', $league->id)->where('request_type', $params['type'])->first();
-            $response = !empty($request) ? $request->response : false;
+            $request = ApiRequest::where('league_id', $id)->where('request_type', $params['type'])->latest()->first();
 
             if (!$request || ($date > $params['cacheExpire'])) {   
-               $request = $this->client->get("$endpoint?$queryString");
-               
-               $json_response = json_decode($request->getBody());
-
-               if (isset($json_response->response)) {
+               $response = $this->client->get("$endpoint?$queryString");
+               $json_response = json_decode($response->getBody());
 
                 foreach ($json_response->response as $data) {
-          
-                    $id = $leagueData->league->id;
-                    $leagueName = $leagueData->league->name;
-                    $leagueCountry = $leagueData->country->name;
 
-                    // Now you can use these values as needed
-                    // For example, printing the league name
+                    $apiRequest = new ApiRequest([
+                        'response' => $data,
+                        'request_type' => $params['type'],
+                        'league_id' => $id
+                    ]);
+                    $requests[] = $apiRequest;
+                    
+                    $apiRequest->save();
 
-                    if (in_array($leagueCountry, $leagues)) {
-                        echo "League Name: $leagueName Country: $leagueCountry";
-                    }
-                }
+                }                
             } else {
-                // Handle the case where 'response' property is not present in the object
-                echo "No response data available.";
+                $requests[] = $request;
             }
-
-
-               $save = true;         
-            }
-    
-            $data[$id]['request'] = $response;
-            
-            $data[$id]['league_id'] = $league->id;
-            $data[$id]['type'] = $params['type'];
         }
 
-        $data['save'] = $save;
-
-        return $data;
+        return $requests;
     }  
     
     protected function saveRequest($request) {    
 
         $apiRequest = ApiRequest::Create([
             'response' => $request['response'],
-            'request_type' => $request['type'],
+            'request_type' => $request['request_type'],
             'league_id' => $request['league_id'],
         ]);
 
@@ -181,36 +168,42 @@ class ApiFootballService
 
     }
 
-    protected function mapApiId($model, $data)
+    protected function mapApiId($model, $request)
     {
+        $query = $model->newQuery();
+        
         $type = strtolower(class_basename($model));
 
-        foreach ($data as $responseItem) {
-            
-            if (!isset($responseItem->response) || !is_array($responseItem->response)) {
-                return;
-            }
-            
-                foreach ($responseItem->response as $record) {
-                
-                    $query = $model::where('name', $record[$type]['name']);
-
-                    if (Schema::hasColumn($model->getTable(), 'country')) {
-                        $query->where('country', $record[$type]['country']['name']);
-                    }
-
-                    $match = $query->first();
-                
-                    if ($match) {
-                    
-                        $match->update([
-                            'api_id' => $record[$type]['id']
-                        ]);
-                    } 
-                }
+        if (Schema::hasColumn($model->getTable(), 'country')) {
+            $query->where('country', $request->response['country']['name']);
         }
 
-        return true;
+        $query->where('name', $request->response[$type]['name']);
+
+        
+        $match = $query->first();
+
+        if ($match) {
+                    
+            $match->update([
+                'api_id' => $request->response[$type]['id']
+            ]);
+            
+            return true;
+        } 
+
+        return false;
+    }
+    
+    protected function applyFilter($data, $params, $league) 
+    {
+        dd($data->{$params['type']}->{$params['filterResults']});
+
+        
+
+        if ($data->{$params['filterResults']} !== $league->country) {
+            continue;
+        }
     }
 
 }

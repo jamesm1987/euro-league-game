@@ -8,14 +8,15 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+// use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class ApiRequest extends Model
 {
     use HasFactory, SoftDeletes;
 
-    // protected $casts = [
-    //     'response' => 'json'
-    // ];
+    protected $casts = [
+        'response' => 'array'
+    ];
 
     protected $fillable = [
         'response',
@@ -24,10 +25,10 @@ class ApiRequest extends Model
     ];
 
 
-    public function type()
-    {
-        return Str::snake(class_basename($this->requestable_type));
-    }
+    // public function requestable(): MorphTo
+    // {
+    //     return $this->morphTo();
+    // }
 
     public static function teams()
     {
@@ -46,11 +47,8 @@ class ApiRequest extends Model
      */
     public function response()
     {
-        return json_decode($this->response);
+        return $this->response;
     }
-
-    
-
     
 }
 

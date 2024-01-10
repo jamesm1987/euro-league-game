@@ -21,6 +21,7 @@
                 "logo":"https:\/\/media.api-sports.io\/football\/leagues\/39.png"
              },
              "country":{
+               "league_id": 1,
                 "name":"England",
                 "code":"GB",
                 "flag":"https:\/\/media.api-sports.io\/flags\/gb.svg"
@@ -9456,6 +9457,7 @@
                 "logo":"https:\/\/media.api-sports.io\/football\/leagues\/140.png"
              },
              "country":{
+               "league_id": 2,
                 "name":"Spain",
                 "code":"ES",
                 "flag":"https:\/\/media.api-sports.io\/flags\/es.svg"
@@ -9832,6 +9834,7 @@
                 "logo":"https:\/\/media.api-sports.io\/football\/leagues\/78.png"
              },
              "country":{
+               "league_id": 3,
                 "name":"Germany",
                 "code":"DE",
                 "flag":"https:\/\/media.api-sports.io\/flags\/de.svg"
@@ -11192,6 +11195,7 @@
                 "logo":"https:\/\/media.api-sports.io\/football\/leagues\/135.png"
              },
              "country":{
+               "league_id": 4,
                 "name":"Italy",
                 "code":"IT",
                 "flag":"https:\/\/media.api-sports.io\/flags\/it.svg"
@@ -12148,6 +12152,7 @@
                 "logo":"https:\/\/media.api-sports.io\/football\/leagues\/61.png"
              },
              "country":{
+               "league_id": 5,
                 "name":"France",
                 "code":"FR",
                 "flag":"https:\/\/media.api-sports.io\/flags\/fr.svg"

@@ -22,7 +22,7 @@
         $response = json_decode($json_leagues);
 
         $leagues = \App\Models\League::pluck('country', 'id')->toArray();
-        
+
         foreach ($response as $item) {
         
         // Check if the 'response' property exists in the object
@@ -47,20 +47,9 @@
             }
         }
     @endphp
+
     
-    @foreach ($request as $req)
-    
-    @php 
-        $response = $req->response();
-        @endphp
-        @foreach ($response as $league)
-            
-            @if ($league->league->name === $req->requestable->name && $league->country->name === $req->requestable->country)
-            <p><strong>{{ $league->league->name }}</strong>: {{ $league->league->id }}</p>
-            @endif
-        @endforeach
-        
-    @endforeach
+
         <div class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-gray-900 selection:bg-red-500 selection:text-white">
             @if (Route::has('login'))
                 <livewire:welcome.navigation />

@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
+use App\Services\ApiFootballService;
+
 // inputs
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;

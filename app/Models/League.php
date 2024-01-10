@@ -13,6 +13,7 @@ class League extends Model
     protected $fillable = [
         'name',
         'country',
+        'api_id',
     ];
 
     public static function getCountries()
