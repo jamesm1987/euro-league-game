@@ -60,7 +60,7 @@ class ApiFootballService
             'cacheExpire' => Carbon::now()->addDays(30),
             'filterResults' => [
                 'filterBy' => 'country',
-                'prefix_type' => true
+                'prefixType' => true
             ],
         ];
 
@@ -85,7 +85,7 @@ class ApiFootballService
             'filterResults' => [
                 'filterBy' => 'country',
                 'field' => 'name',
-                'prefix_type' => false
+                'prefixType' => false
             ],
         ];
 
@@ -202,7 +202,7 @@ class ApiFootballService
         
 
         if ($data->{$params['filterResults']} !== $league->country) {
-            continue;
+            
         }
     }
 

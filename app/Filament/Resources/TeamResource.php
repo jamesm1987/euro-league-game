@@ -13,6 +13,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\Filter;
 
 use App\Filament\Imports\TeamImporter;
 use Filament\Tables\Actions\ImportAction;
@@ -72,7 +73,8 @@ class TeamResource extends Resource
             ->filters([
                 SelectFilter::make('league')
                 ->options(League::getLeagues())
-                ->attribute('league_id')
+                ->attribute('league_id'),
+                Filter::make('Api Unmapped')->query(fn (Builder $query): Builder => $query->where('api_id', 0)) 
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -93,13 +95,12 @@ class TeamResource extends Resource
                             ->required(),
 
                         Select::make('api_team')->label('API')
-                            ->options(ApiRequest::where('request_type', 'team')->pluck('response'))
+                            ->options(Team::getUnMappedTeams())
                             ->required(),
                     ])
                     ->action(function (array $data, Team $record): void {
-                        dd($data);
-                        // $record->author()->associate($data['authorId']);
-                        // $record->save();
+                        $record->api_id = $data['api_team'];
+                        $record->save();
                     })->slideOver()
                 
             ])

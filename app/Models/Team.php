@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Arr;
 
 
 class Team extends Model
@@ -34,4 +35,21 @@ class Team extends Model
         );
     }
 
+    public static function getUnMappedTeams() 
+    {
+        $teams = self::pluck('name')->toArray();
+
+        $apiTeams = ApiRequest::where('request_type', 'team')->pluck('response');
+        $unmappedTeams = [];
+        foreach ($apiTeams as $apiTeam) {
+            if (in_array($apiTeam['team']['name'], $teams)) {
+                continue;
+            }
+            $unmappedTeams[$apiTeam['team']['id']] = $apiTeam['team']['name'];
+        }
+
+        return Arr::sort($unmappedTeams);
+    }
 }
+
+
