@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Collection;
 use App\Models\League;
 use App\Models\Team;
+use App\Models\Fixture;
 use App\Models\ApiRequest;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
@@ -29,22 +30,29 @@ class ApiFootballService
 
     public function getFixtures()
     {
-
+        $model = new Fixture;
         $apiParams = [
             'type' => 'fixture',
             'endpoint' => 'fixtures',
             'args' => [
                 'league' => 'api_id',
             ],
-            'season' => true
+            'season' => true,
+            'cacheExpire' => Carbon::now()->addHours(1),
+            // 'filterResults' => [
+                // 'filterBy' => 'country',
+                // 'prefixType' => true
+            // ],
         ];
 
         $requests = $this->apiQuery($apiParams);
         
-        $apiRequest = $this->saveRequests($requests);
+        foreach ($requests as $request) {    
+            $this->mapApiId($model, $request);
+        }
 
 
-        return $apiRequest;
+        return $requests;
     }
 
     public function getTeams()

@@ -45,6 +45,7 @@ class Team extends Model
             if (in_array($apiTeam['team']['name'], $teams)) {
                 continue;
             }
+
             $unmappedTeams[$apiTeam['team']['id']] = $apiTeam['team']['name'];
         }
 
