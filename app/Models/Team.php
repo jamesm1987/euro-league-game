@@ -7,9 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Arr;
+use App\Contracts\ApiMappable;
+use Illuminate\Database\Eloquent\Builder;   
 
 
-class Team extends Model
+class Team extends Model implements ApiMappable
 {
     use HasFactory, SoftDeletes;
 
@@ -51,6 +53,22 @@ class Team extends Model
 
         return Arr::sort($unmappedTeams);
     }
+
+    public static function mappingkeys()
+    {
+        return ['team'];
+    }
+
+    public function scopeByApiId(Builder $query, string $id): void
+    {
+        $query->where('api_id', $id);
+    }
+
+    public function mapApiId($apiRequests)
+    {
+
+    }
+
 }
 
 

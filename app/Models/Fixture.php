@@ -30,13 +30,47 @@ class Fixture extends Model
         return $this->belongsTo(Team::class, 'away_team_id');
     }
 
+    public function teams()
+    {
+        return [
+            'home' => $this->homeTeam, 
+            'away' => $this->awayTeam
+        ];
+    }
+
     public function league()
     {
         return $this->homeTeam()->league()->id;
     }
 
-    
+    public static function mappingkeys()
+    {
+        return ['goals', 'teams','fixture'];
+    }
+
+    public function result()
+    {
+        return $this->hasOne(Result::class);
+    }
+
+    public function createFixture($fixture, $teams)
+    {
+        $fixture = new Fixture;
+
+
+        $fixture->home_team_id = Team::ByApiId($teams->home->id)->get('id');
+        $fixture->away_team_id = Team::ByApiId($teams->away->id)->get('id');
+
+        $fixture->api_id = $fixture->id;
+        $fixture->kickoff_at = $fixture->date;
+        $fixture->save();
+
+
+    }
+
+    public function mapApiId($apiRequests)
+    {
+        
+    }
     
 }
-
-

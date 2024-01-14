@@ -39,18 +39,12 @@ class ApiFootballService
             ],
             'season' => true,
             'cacheExpire' => Carbon::now()->addHours(1),
-            // 'filterResults' => [
-                // 'filterBy' => 'country',
-                // 'prefixType' => true
-            // ],
         ];
 
         $requests = $this->apiQuery($apiParams);
         
-        foreach ($requests as $request) {    
-            $this->mapApiId($model, $request);
-        }
-
+          
+        $model->mapApiId($requests);
 
         return $requests;
     }
@@ -66,10 +60,6 @@ class ApiFootballService
             ],
             'season' => true,
             'cacheExpire' => Carbon::now()->addDays(30),
-            'filterResults' => [
-                'filterBy' => 'country',
-                'prefixType' => true
-            ],
         ];
 
         $requests = $this->apiQuery($apiParams);
@@ -87,21 +77,20 @@ class ApiFootballService
         $apiParams = [
             'type' => 'league', 
             'endpoint' => 'leagues', 
-            'args' => ['search' => 'name'], 
+            'args' => [
+                'name' => 'name',
+                'country' => 'country',
+            ], 
             'season' => false,
             'cacheExpire' => Carbon::now()->addDays(30),
-            'filterResults' => [
-                'filterBy' => 'country',
-                'field' => 'name',
-                'prefixType' => false
-            ],
+            'filterByCountry' => true,
+            'filterByType' => true
         ];
 
         $requests = $this->apiQuery($apiParams);
-        
-        foreach ($requests as $request) {
-            $this->mapApiId($model, $request);
-        }
+
+        $model->mapApiToModel($requests);
+    
       
         return $requests;
     }
@@ -117,39 +106,41 @@ class ApiFootballService
     protected function apiQuery($params)
     {
         $leagues = League::all();
+
         $year = $this->getYear();
         $endpoint = $params['endpoint'];
         $date = Carbon::now();
     
         $requests = [];
         
-        foreach ($leagues as $id => $league) {
+        foreach ($leagues as $league) {
             
             $queryString = "";
             
             
             foreach ($params['args'] as $key => $value) {
-    
                 $queryString .= "$key={$league->$value}&";
             
             }
-
+       
             $queryString = substr($queryString, 0, -1) . (!empty($params['season']) ? "&season=$year" : "");
-                        
+ 
             // attempt to load from db
-            $request = ApiRequest::where('league_id', $id)->where('request_type', $params['type'])->latest()->first();
+            $request = ApiRequest::where('league_id', $league->id)->where('request_type', $params['type'])->where('created_at', '<', $params['cacheExpire'])->get();
 
-            if (!$request || ($date > $params['cacheExpire'])) {   
+            if (count($request) === 0 || ($date > $params['cacheExpire'])) {  
+                
                $response = $this->client->get("$endpoint?$queryString");
                $json_response = json_decode($response->getBody());
 
                 foreach ($json_response->response as $data) {
-
+                  
                     $apiRequest = new ApiRequest([
                         'response' => $data,
                         'request_type' => $params['type'],
-                        'league_id' => $id
+                        'league_id' => $league->id
                     ]);
+                    
                     $requests[] = $apiRequest;
                     
                     $apiRequest->save();
@@ -176,32 +167,40 @@ class ApiFootballService
 
     }
 
-    protected function mapApiId($model, $request)
-    {
-        $query = $model->newQuery();
+    // protected function mapApiId($model, $request)
+    // {
+    //     $query = $model->newQuery();
         
-        $type = strtolower(class_basename($model));
+    //     $type = strtolower(class_basename($model));
 
-        if (Schema::hasColumn($model->getTable(), 'country')) {
-            $query->where('country', $request->response['country']['name']);
-        }
-
-        $query->where('name', $request->response[$type]['name']);
+    //     if (Schema::hasColumn($model->getTable(), 'country')) {
+    //         $query->where('country', $request->response['country']['name']);
+    //     }
 
         
-        $match = $query->first();
-
-        if ($match) {
-                    
-            $match->update([
-                'api_id' => $request->response[$type]['id']
-            ]);
+    //     foreach ($model::mappingKeys() as $key) {
             
-            return true;
-        } 
+    //         $temp[] = $request->response[$key];
+    //     }
 
-        return false;
-    }
+    //     dd($temp);
+        // var_dump($request->response[$type]);
+        // $query->where('name', $request->response[$type]['name']);
+
+        
+        // $match = $query->first();
+
+        // if ($match) {
+                    
+        //     $match->update([
+        //         'api_id' => $request->response[$type]['id']
+        //     ]);
+            
+        //     return true;
+        // } 
+
+        // return false;
+    //}
     
     protected function applyFilter($data, $params, $league) 
     {

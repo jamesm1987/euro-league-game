@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Emoji\Emoji;
+use App\Contracts\ApiMappable;
+use App\Traits\Models\HasApiRequests;
 
-class League extends Model
+class League extends Model implements ApiMappable
 {
-    use HasFactory;
+    use HasFactory, HasApiRequests;
 
     protected $fillable = [
         'name',
@@ -70,4 +72,14 @@ class League extends Model
     {
         return self::orderBy('id')->pluck('name', 'id')->toArray();
     }
+
+    public static function mappingkeys()
+    {
+        return [
+            'league' => 'name', 
+            'country' => 'country'
+        ];
+    }
+
+
 }

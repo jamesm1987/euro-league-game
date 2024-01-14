@@ -46,6 +46,7 @@
                 echo "No response data available.";
             }
         }
+
     @endphp
 
     
