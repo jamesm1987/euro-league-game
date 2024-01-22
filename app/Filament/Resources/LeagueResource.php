@@ -85,7 +85,7 @@ class LeagueResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\TeamsRelationManager::class
         ];
     }
 

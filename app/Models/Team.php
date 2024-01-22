@@ -8,12 +8,13 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Arr;
 use App\Contracts\ApiMappable;
-use Illuminate\Database\Eloquent\Builder;   
+use Illuminate\Database\Eloquent\Builder;
+use App\Traits\Models\HasApiRequests;
 
 
 class Team extends Model implements ApiMappable
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasApiRequests;
 
     protected $fillable = [
         'name',
@@ -21,9 +22,6 @@ class Team extends Model implements ApiMappable
         'price',
         'api_id',
     ];
-
-
-
 
     public function league()
     {
@@ -35,6 +33,28 @@ class Team extends Model implements ApiMappable
         return Attribute::make(
             // get: fn (int $value) => ($value * 1000000)
         );
+    }
+
+    public function fixtures()
+    {
+        return $this->hasMany(Fixture::class, 'home_team_id')
+            ->orWhere('away_team_id', $this->getKey()
+        );
+    }
+
+    public function homeResults()
+    {
+        return $this->hasManyThrough(Result::class, Fixture::class, 'home_team_id', 'fixture_id');
+    }
+
+    public function awayResults()
+    {
+        return $this->hasManyThrough(Result::class, Fixture::class, 'away_team_id', 'fixture_id');
+    }
+
+    public function results()
+    {
+        return $this->homeResults->merge($this->awayResults);
     }
 
     public static function getUnMappedTeams() 
@@ -59,16 +79,10 @@ class Team extends Model implements ApiMappable
         return ['team'];
     }
 
-    public function scopeByApiId(Builder $query, string $id): void
+    public function scopeByApiId(Builder $query, string $id)
     {
-        $query->where('api_id', $id);
-    }
-
-    public function mapApiId($apiRequests)
-    {
-
+        return $query->where('api_id', $id);
     }
 
 }
-
 

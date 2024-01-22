@@ -18,6 +18,11 @@ class League extends Model implements ApiMappable
         'api_id',
     ];
 
+    public function teams()
+    {
+        return $this->hasMany(Team::class);
+    }
+
     public static function getCountries()
     {
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class Result extends Model
 {
@@ -30,4 +31,17 @@ class Result extends Model
     {
         return $this->fixture->awayTeam;
     }
+
+    protected function finalScore(): Attribute
+    {
+        return Attribute::make(
+            get: fn (mixed $value) => "{$this->home_team_score} - {$this->away_team_score}"
+        );
+    }
+
+    public function mapApiToModel($requests)
+    {
+        dd($requests);
+    }
 }
+

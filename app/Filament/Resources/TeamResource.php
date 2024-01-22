@@ -46,7 +46,7 @@ class TeamResource extends Resource
             ->schema([
                 TextInput::make('name'),
                 Select::make('league_id')->label('League')->relationship('league', 'name'),
-                TextInput::make('price')
+                TextInput::make('price')->prefix('£')->suffix('m')
             ]);
         
     }
@@ -68,7 +68,9 @@ class TeamResource extends Resource
             ->columns([
                 TextColumn::make('name')->sortable(),
                 TextColumn::make('league.name')->sortable(),
-                TextColumn::make('price')->formatStateUsing(fn (string $state): string => __("£{$state}m")),
+                TextColumn::make('price')
+                    ->prefix('£')
+                    ->suffix('m')
             ])
             ->filters([
                 SelectFilter::make('league')
@@ -114,6 +116,7 @@ class TeamResource extends Resource
     public static function getRelations(): array
     {
         return [
+            RelationManagers\FixturesRelationManager::class,
             RelationManagers\LeagueRelationManager::class,
         ];
     }
