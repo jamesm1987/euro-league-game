@@ -7,6 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 
+use Illuminate\Support\Facades\Log;
+
+use App\Jobs\CreateResultJob;
+
 class Result extends Model
 {
     use HasFactory, SoftDeletes;
@@ -39,9 +43,17 @@ class Result extends Model
         );
     }
 
-    public function mapApiToModel($requests)
+    public function mapApiToModel($apiRequestCollection)
     {
-        dd($requests);
+    
+        foreach ($apiRequestCollection as $collection) {
+            
+            foreach ($collection as $apiRequest) {
+
+                Log::info($apiRequest);
+                CreateResultJob::dispatch($apiRequest->response)->onQueue('default');
+            }
+        }
     }
 }
 

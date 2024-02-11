@@ -33,6 +33,7 @@ use Carbon\Carbon;
 
 //columns
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\IconColumn;
 
 class FixtureResource extends Resource
 {
@@ -59,7 +60,9 @@ class FixtureResource extends Resource
                TextColumn::make('homeTeam.name'),
                TextColumn::make('awayTeam.name'),
                TextColumn::make('homeTeam.league.name')->label('League'),
-               TextColumn::make('kickoff_at')->label('Date')->dateTime('D d F Y, H:i')->sortable()
+               TextColumn::make('kickoff_at')->label('Date')->dateTime('d/m/Y, H:i')->sortable(),
+               IconColumn::make('result_exists')->exists('result')->boolean()->label('Result')
+               
             ])
             ->filters([
                 SelectFilter::make('league')
@@ -97,8 +100,9 @@ class FixtureResource extends Resource
 
     public static function getRelations(): array
     {
+        
         return [
-            //
+            RelationManagers\ResultRelationManager::class
         ];
     }
 

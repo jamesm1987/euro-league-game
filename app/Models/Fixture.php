@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Jobs\CreateFixtureJob;
+
 class Fixture extends Model
 {
     use HasFactory, SoftDeletes;
@@ -53,51 +55,6 @@ class Fixture extends Model
         return $this->hasOne(Result::class);
     }
 
-    protected function createFixture($data)
-    {
-        $model = new Fixture;
-
-        $teams = $data['teams'];
-        $fixture = $data['fixture'];
-        $result = $data['score']['fulltime'];
-
-        $data = [
-            'home_team_id' => Team::ByApiId($teams['home']['id'])->first('id')->id,
-            'away_team_id' => Team::ByApiId($teams['away']['id'])->first('id')->id,
-            'api_id' => $fixture['id'],
-            'kickoff_at' => $fixture['date']
-        ];
-        
-        $fixtureId = $model->firstOrNew(['api_id' => $fixture['id']], $data);
-    
-        if (!is_null($result['home']) && !is_null($result['away'])) {
-            $this->saveResult($fixtureId, $result);
-        }
-
-        return true;
-
-
-    }
-
-    protected function saveResult($fixture, $result)
-    {
-        
-        $model = new Result;
-
-
-        $home_team_score = $result['home'];
-        $away_team_score = $result['away'];
-
-        dd($fixture);
-
-        $model->upsert(
-            ['fixture_id' => $fixture->id, 'home_team_score' => $home_team_score, 'away_team_score' => $away_team_score],
-            ['fixture_id'],
-            ['fixture_id', 'home_team_score', 'away_team_score']
-        );
-
-        return true;
-    }
 
     public function mapApiToModel($apiRequestCollection)
     {
@@ -105,9 +62,10 @@ class Fixture extends Model
         foreach ($apiRequestCollection as $collection) {
             
             foreach ($collection as $apiRequest) {
-                $this->createFixture($apiRequest->response);
+                CreateFixtureJob::dispatch($apiRequest->response)->onQueue('default');
             }
         }
     }
+
     
 }

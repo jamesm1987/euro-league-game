@@ -9,6 +9,8 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
 
+use App\Jobs\CleanUpOldCachedData;
+
 
 class ApiFootballService
 {
@@ -28,6 +30,7 @@ class ApiFootballService
     public function getResults()
     {
         $model = new Result;
+        
         $apiParams = [
             'type' => 'result',
             'endpoint' => 'fixtures',
@@ -36,12 +39,16 @@ class ApiFootballService
                 'to' => Carbon::now()->format('Y-m-d')
             ],
             'season' => true,
-            'cacheExpire' => Carbon::now()->addHours(1),
+            'cacheExpire' => '1 minute'
         ];
 
+        CleanUpOldCachedData::dispatch($apiParams['type'], $apiParams['cacheExpire'])->onQueue('default');
+        
         $requests = $this->apiQuery($apiParams);
 
         $model->mapApiToModel($requests);
+
+        return $requests;
     }
 
     public function getFixtures()
@@ -52,8 +59,10 @@ class ApiFootballService
             'endpoint' => 'fixtures',
             'args' => [],
             'season' => true,
-            'cacheExpire' => Carbon::now()->addHours(1),
+            'cacheExpire' => '1 day',
         ];
+
+        CleanUpOldCachedData::dispatch($apiParams['type'], $apiParams['cacheExpire'])->onQueue('default');
 
         $requests = $this->apiQuery($apiParams);
         
@@ -71,7 +80,7 @@ class ApiFootballService
             'endpoint' => 'teams',
             'args' => [],
             'season' => true,
-            'cacheExpire' => Carbon::now()->addDays(30),
+            'cacheExpire' => '30 day'
         ];
 
         $requests = $this->apiQuery($apiParams);
@@ -94,7 +103,7 @@ class ApiFootballService
                 'country' => 'country',
             ], 
             'season' => false,
-            'cacheExpire' => Carbon::now()->addDays(30),
+            'cacheExpire' => '30 day',
             'filterByCountry' => true,
             'filterByType' => true
         ];
@@ -125,7 +134,7 @@ class ApiFootballService
     
         $requests = [];
         
-        foreach ($leagues as $league) {
+        foreach ($leagues as $key => $league) {
             
             $queryString = "league={$league->api_id}";
             
@@ -144,9 +153,11 @@ class ApiFootballService
 
  
             // attempt to load from db
-            $request = ApiRequest::where('league_id', $league->id)->where('request_type', $params['type'])->where('created_at', '<', $params['cacheExpire'])->get();
+            $request = ApiRequest::where('league_id', $league->id)->where('request_type', $params['type'])->latest('created_at')->get();
+            
+            $latest = !empty($request) ? $request->first() : null;
 
-            if (count($request) === 0 || ($date > $params['cacheExpire'])) {  
+            if (!$latest || $date > $latest->created_at->add($params['cacheExpire'])) {
                 
                $response = $this->client->get("$endpoint?$queryString");
                
@@ -154,22 +165,21 @@ class ApiFootballService
 
                 foreach ($json_response->response as $data) {
                   
-                    $apiRequest = new ApiRequest([
+                    $apiRequest = ApiRequest::create([
                         'response' => $data,
                         'request_type' => $params['type'],
                         'league_id' => $league->id
                     ]);
                     
-                    $requests[] = $apiRequest;
-                    
-                    $apiRequest->save();
+                    $requests[$key] = collect($apiRequest);
+                }
+                
 
-                }                
             } else {
                 $requests[] = $request;
             }
         }
-
+        
         return $requests;
     }  
     

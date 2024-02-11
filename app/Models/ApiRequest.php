@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -12,7 +11,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class ApiRequest extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $casts = [
         'response' => 'array'
@@ -25,10 +24,6 @@ class ApiRequest extends Model
     ];
 
 
-    // public function requestable(): MorphTo
-    // {
-    //     return $this->morphTo();
-    // }
 
     public static function teams()
     {
