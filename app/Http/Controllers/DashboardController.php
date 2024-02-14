@@ -13,6 +13,7 @@ class DashboardController extends Controller
     public function index()
     {
         $leagues = League::with('teams')->get();
+
         return Inertia::render('Dashboard', [
             'leagueTeams' => LeagueTeamsResource::collection($leagues),
         ]);
