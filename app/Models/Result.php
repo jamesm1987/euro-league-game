@@ -49,8 +49,6 @@ class Result extends Model
         foreach ($apiRequestCollection as $collection) {
             
             foreach ($collection as $apiRequest) {
-
-                Log::info($apiRequest);
                 CreateResultJob::dispatch($apiRequest->response)->onQueue('default');
             }
         }

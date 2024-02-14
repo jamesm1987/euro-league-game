@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 use Filament\Tables\Columns\TextColumn;
+use Filament\Forms\Components\CheckboxList;
 
 class UserResource extends Resource
 {
@@ -25,7 +26,7 @@ class UserResource extends Resource
     {
         return $form
             ->schema([
-    
+                CheckboxList::make('roles')->relationship('roles', 'name')->searchable()
             ]);
     }
 

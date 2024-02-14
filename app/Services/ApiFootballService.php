@@ -65,8 +65,7 @@ class ApiFootballService
         CleanUpOldCachedData::dispatch($apiParams['type'], $apiParams['cacheExpire'])->onQueue('default');
 
         $requests = $this->apiQuery($apiParams);
-        
-          
+
         $model->mapApiToModel($requests);
 
         return $requests;
@@ -85,9 +84,7 @@ class ApiFootballService
 
         $requests = $this->apiQuery($apiParams);
         
-        foreach ($requests as $request) {    
-            $this->mapApiId($model, $request);
-        }
+        $model->mapApiToModel($requests);
     
         return $requests;
     }
@@ -162,18 +159,17 @@ class ApiFootballService
                $response = $this->client->get("$endpoint?$queryString");
                
                $json_response = json_decode($response->getBody());
-
+               $apiRequests = [];
                 foreach ($json_response->response as $data) {
                   
-                    $apiRequest = ApiRequest::create([
+                    $apiRequests[] = ApiRequest::create([
                         'response' => $data,
                         'request_type' => $params['type'],
                         'league_id' => $league->id
                     ]);
-                    
-                    $requests[$key] = collect($apiRequest);
                 }
                 
+                $requests[$key] = collect($apiRequests);
 
             } else {
                 $requests[] = $request;

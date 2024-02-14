@@ -10,6 +10,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 use App\Models\Result;
 use App\Models\Team;
@@ -34,8 +35,7 @@ class CreateFixtureJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $fixture = Fixture::firstOrNew(['api_id' => $this->data['fixture']['id']], $this->data);
-        
+        $fixture = Fixture::firstOrNew(['api_id' => $this->data['fixture']['id']], $this->data);        
         if ($fixture->result) {
             return;
         }

@@ -56,6 +56,10 @@ class Team extends Model implements ApiMappable
     {
         return $this->homeResults->merge($this->awayResults);
     }
+    public function points()
+    {
+        return $this->hasMany(Point::class);
+    }
 
     public static function getUnMappedTeams() 
     {
@@ -83,6 +87,5 @@ class Team extends Model implements ApiMappable
     {
         return $query->where('api_id', $id);
     }
-
 }
 
