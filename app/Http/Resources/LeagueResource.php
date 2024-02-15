@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 use App\Http\Resources\TeamResource;
 
-class LeagueTeamsResource extends JsonResource
+class LeagueResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -19,7 +19,7 @@ class LeagueTeamsResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'teams' => TeamResource::collection($this->whenLoaded('teams'))
+            'teams' => new TeamResource($this->whenLoaded('teams')),
         ];
     }
 }
