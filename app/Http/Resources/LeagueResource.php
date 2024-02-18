@@ -19,7 +19,7 @@ class LeagueResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'teams' => new TeamResource($this->whenLoaded('teams')),
+            'teams' => TeamResource::collection($this->teams)
         ];
     }
 }

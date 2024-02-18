@@ -87,4 +87,10 @@ class League extends Model implements ApiMappable
     }
 
 
+    public function toResource()
+    {
+        return new \App\Http\Resources\LeagueResource($this);
+    }
+
+
 }

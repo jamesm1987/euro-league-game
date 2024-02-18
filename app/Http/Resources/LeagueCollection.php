@@ -16,7 +16,7 @@ class LeagueCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => LeagueResource::collection($this->collection),
+            'data' => $this->id
         ];
     }
 }
