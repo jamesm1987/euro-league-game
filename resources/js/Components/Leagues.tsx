@@ -115,7 +115,7 @@ const Leagues: React.FC<LeaguesProps> = ({ leagues, budget }) => {
   return (
     <div className="container mx-auto mt-8 p-8 bg-white rounded shadow-lg">
       <h2 className="text-2xl font-semibold mb-4">
-        Select 2 Teams from Each League
+        Select 2 teams from each league
       </h2>
       {calculateTotalSpend()}
       <form onSubmit={handleSubmit}>
@@ -153,7 +153,7 @@ const Leagues: React.FC<LeaguesProps> = ({ leagues, budget }) => {
           </div>
         ))}
 
-        <Button type="submit">Submit</Button>
+        <Button variant="dark" type="submit">Submit</Button>
       </form>
     </div>
   );
